@@ -1,0 +1,113 @@
+worker_processes  1;
+
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    proxy_cache_path  /home/nginx/cache/one levels=1:2 keys_zone=one:{{getv "/bmi/skyvis/config/nginx/cache/zone_size" "50m"}} max_size={{getv "/bmi/skyvis/config/nginx/cache/max_size" "10g"}} inactive={{getv "/bmi/skyvis/config/nginx/cache/inactive" "24h"}} use_temp_path=off;
+    include      mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    {{range $dir := lsdir "/bmi/skyvis/services/web"}}
+    upstream {{base $dir}} {
+        {{$custdir := printf "/bmi/skyvis/services/web/%s/*" $dir}}{{range gets $custdir}}
+        server {{$data := json .Value}}{{$data.ip}}:{{$data.port}} {{if $data.weight}} weight={{$data.weight}}{{end}}; 
+        {{end}}
+    }
+    {{end}}
+
+    server {
+        server_name -; # 这里可以匹配任何 host
+        add_header Access-Control-Allow-Origin *;
+
+        location = /crossdomain.xml {
+            content_by_lua_block {
+            local resp = [[
+                <?xml version="1.0" encoding="utf-8"?>
+                <cross-domain-policy>
+                    <allow-access-from domain="*"/>
+                </cross-domain-policy>
+            ]]
+            local len = string.len(resp)
+            ngx.header.content_type = 'text/xml'
+            ngx.header.content_length = len
+            ngx.say(resp)
+            }
+        }
+
+        location ~ /vod/proxy/s3/video.(ts|m3u8) {
+            proxy_http_version 1.1;
+            proxy_pass http://svvod;
+            proxy_cache one;
+            proxy_cache_valid  200 206 304 301 302 {{getv "/bmi/skyvis/config/nginx/cache/expire" "24h"}};
+            proxy_cache_key $request_uri;
+        }
+
+        location = /gateway_getsecret {
+            proxy_http_version 1.1;
+            proxy_pass http://gateway/skyvis/gateway/secret;
+        }
+
+        location /bmi/skyvis/video {
+            proxy_http_version 1.1;
+            access_by_lua_block {
+                local secret_res = ngx.location.capture('/gateway_getsecret',
+                { args =  ngx.var.args })
+                if secret_res.status ~= ngx.HTTP_OK then
+                    ngx.status = secret_res.status
+                    ngx.say(secret_res.body)
+                    ngx.exit(ngx.HTTP_OK)
+                    return
+                end
+                local next_uri = ngx.re.sub(ngx.var.uri,'^/bmi/skyvis/video(.*)','/vod/proxy/s3/video$1')
+                local vod_res = ngx.location.capture(next_uri,
+                {args = string.format("%s&%s",secret_res.body,ngx.var.args)})
+                if vod_res.status ~= ngx.HTTP_OK then
+                    ngx.status = vod_res.status
+                    ngx.say(vod_res.body)
+                    ngx.exit(ngx.HTTP_OK)
+                    return
+                else
+                    ngx.say(vod_res.body)
+                    return
+                end
+            }
+
+        }
+
+        location ~ /bmi/skyvis/task/(.*) {
+            rewrite /bmi/skyvis/task/(.*) /skyvis/gateway/$1 break;
+            proxy_http_version 1.1;
+            proxy_pass http://gateway;
+        }
+
+        location = /bmi/skyvis/help {
+            proxy_http_version 1.1;
+            proxy_pass http://gateway/skyvis/gateway/help;
+        }
+
+        location = /bmi/skyvis/status {
+            stub_status on;
+            access_log off;
+        }
+    }
+}

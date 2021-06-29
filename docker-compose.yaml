@@ -1,0 +1,12 @@
+version: "3"
+services:
+  test_balancer:
+    restart: always
+    image: openresty/openresty
+    ports:
+      - "8888:8888"
+    environment:
+      HOST_IP: "192.168.1.42"
+      TZ: "Asia/Shanghai"
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf

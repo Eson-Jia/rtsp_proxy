@@ -10,3 +10,16 @@ services:
       TZ: "Asia/Shanghai"
     volumes:
       - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./service:/usr/local/openresty/nginx/service
+
+  rtsp:
+    restart: always
+    image: aler9/rtsp-simple-server
+    ports:
+      - "8554:8554"
+      - "1935:1935"
+    environment:
+      RTSP_PATHS_TEST_SOURCE: "rtsp://admin:123qweasd@192.168.10.180"
+
+  
+

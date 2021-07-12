@@ -1,0 +1,51 @@
+stages:
+  - install_dep
+  - test
+  - build_docker
+  - deploy
+
+image: dockerhub.bmi:5000/node:8.9.3-alpine
+
+build_job:
+  image: dockerhub.bmi:5000/node:8.9.3-alpine
+  stage: install_dep
+  only:
+    - master
+    - dev
+    - tags
+  script: 
+    - npm --registry http://dockerhub.bmi:4873 install
+    - npm run compile
+
+test_job:
+  stage: test
+  only:
+  - master
+  - dev
+  - tags
+  script: echo test
+
+build_docker_job:
+  stage: build_docker
+  image: dockerhub.bmi:5000/docker:stable
+  services:
+  - name: docker:18-dind
+    command: ["--insecure-registry=dockerhub.bmi:5000"]
+  only:
+    - master
+    - dev
+    - tags
+  script:
+    - docker build -t dockerhub.bmi:5000/rps:$CI_COMMIT_REF_NAME .
+    - docker push dockerhub.bmi:5000/rps:$CI_COMMIT_REF_NAME
+
+deploy_job:
+  image: dockerhub.bmi:5000/expect-ssh:latest
+  stage: deploy
+  only:
+    - master
+    - dev
+    - tags
+  script:
+  - ./update_test_docker.sh $TEST_PC $TEST_USER $TEST_PASSWORD rps:$CI_COMMIT_REF_NAME rps
+

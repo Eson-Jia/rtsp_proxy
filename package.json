@@ -1,0 +1,35 @@
+{
+  "name": "rtsp_proxy",
+  "version": "1.0.0",
+  "description": "`FSS`从`RMS/Darwin`取流,然后自己作为`rtsp`服务端,`proxy`放在多个`FSS`的前段负责**服务发现**以及**负载均衡**.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eson-Jia/rtsp_proxy.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Eson-Jia/rtsp_proxy/issues"
+  },
+  "homepage": "https://github.com/Eson-Jia/rtsp_proxy#readme",
+  "dependencies": {
+    "config": "^3.3.6",
+    "redis": "^3.1.2"
+  },
+  "devDependencies": {
+    "@types/config": "^0.0.38",
+    "@types/node": "^16.0.0",
+    "@types/redis": "^2.8.30",
+    "del": "^6.0.0",
+    "gulp": "^4.0.2",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "gulp-watch": "^5.0.1",
+    "typescript": "^4.3.5"
+  }
+}

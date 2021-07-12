@@ -1,9 +1,4 @@
 import { createConnection, createServer } from "net";
-import { createClient } from "redis";
-import { get } from "config";
-
-
-const client = createClient(get(""));
 
 const server = createServer((client) => {
     // 'connection' 监听器。
@@ -24,9 +19,9 @@ const server = createServer((client) => {
         const originURL = content[1];
         const requestURL = new URL(originURL);
         const peerParam = requestURL.searchParams.get('upstream');
-        const [peer, token] = [peerParam ? peerParam : '192.168.1.72:8554', requestURL.searchParams.get('token')];
+        const [peer, token] = [peerParam ? peerParam : '192.168.1.17:8554', requestURL.searchParams.get('token')];
         const [hostname, port] = peer.split(':');
-        const peerSocket = createConnection({ port:123, host: hostname }, () => {
+        const peerSocket = createConnection({ port:8554, host: hostname }, () => {
             peerSocket.write(data);
             peerSocket.pipe(client);
             client.pipe(peerSocket);

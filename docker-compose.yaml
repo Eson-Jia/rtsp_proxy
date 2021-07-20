@@ -21,5 +21,15 @@ services:
     environment:
       RTSP_PATHS_TEST_SOURCE: "rtsp://admin:123qweasd@192.168.10.180"
 
+  zl:
+    restart: always
+    image: panjjo/zlmediakit
+    ports: 
+      - "1935:1935"
+      - "554:554"
+      - "10000:10000"
+      - "80:80"
+      - "10000:10000/udp"
+
   
 

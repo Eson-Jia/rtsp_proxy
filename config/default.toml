@@ -1,0 +1,13 @@
+[server]
+port = 8888
+streamTimeout = 20000
+
+[redis]
+host = "localhost"
+password = "admin"
+port = "6379"
+
+[log]
+consoleLevel = "debug"
+fileLevel = "debug"
+logDir = "/opt/proxy"

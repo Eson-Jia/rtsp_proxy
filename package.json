@@ -18,10 +18,15 @@
   },
   "homepage": "https://github.com/Eson-Jia/rtsp_proxy#readme",
   "dependencies": {
+    "bluebird": "^3.7.2",
     "config": "^3.3.6",
-    "redis": "^3.1.2"
+    "redis": "^3.1.2",
+    "toml": "^3.0.0",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.5"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.36",
     "@types/config": "^0.0.38",
     "@types/node": "^16.0.0",
     "@types/redis": "^2.8.30",

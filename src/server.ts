@@ -1,3 +1,4 @@
+import config from "config";
 import { createConnection, createServer } from "net";
 
 const server = createServer((client) => {
@@ -19,9 +20,9 @@ const server = createServer((client) => {
         const originURL = content[1];
         const requestURL = new URL(originURL);
         const peerParam = requestURL.searchParams.get('upstream');
-        const [peer, token] = [peerParam ? peerParam : '192.168.1.17:8554', requestURL.searchParams.get('token')];
+        const [peer, token] = [peerParam ? peerParam : '192.168.1.72:8554', requestURL.searchParams.get('token')];
         const [hostname, port] = peer.split(':');
-        const peerSocket = createConnection({ port:8554, host: hostname }, () => {
+        const peerSocket = createConnection({ port:8554, host: '192.168.1.17' }, () => {
             peerSocket.write(data);
             peerSocket.pipe(client);
             client.pipe(peerSocket);
@@ -35,6 +36,6 @@ const server = createServer((client) => {
 server.on('error', (err) => {
     throw err;
 });
-server.listen(8888, () => {
+server.listen(config.get("server.port"), () => {
     console.log('server bound');
 });
